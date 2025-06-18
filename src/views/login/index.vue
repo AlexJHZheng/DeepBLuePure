@@ -43,9 +43,9 @@ const ruleForm = reactive({
 
 const onLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
+  loading.value = true;
   await formEl.validate(valid => {
     if (valid) {
-      loading.value = true;
       useUserStoreHook()
         .loginByUsername({
           username: ruleForm.username,
@@ -56,18 +56,38 @@ const onLogin = async (formEl: FormInstance | undefined) => {
             // 获取后端路由
             return initRouter().then(() => {
               disabled.value = true;
-              router
-                .push(getTopMenu(true).path)
-                .then(() => {
-                  message("登录成功", { type: "success" });
-                })
-                .finally(() => (disabled.value = false));
+              setTimeout(() => {
+                const topMenu = getTopMenu(true);
+                console.log("topMenu", topMenu);
+                if (topMenu && topMenu.path) {
+                  router.push(topMenu.path).then(() => {
+                    message("登录成功", { type: "success" });
+                  });
+                } else {
+                  message("未获取到有效菜单，无法跳转", { type: "error" });
+                }
+                disabled.value = false;
+              }, 0);
             });
           } else {
-            message("登录失败", { type: "error" });
+            const msg = (res as any).message || "登录失败";
+            message(msg, { type: "error" });
+          }
+        })
+        .catch(error => {
+          if (
+            error.response &&
+            error.response.data &&
+            error.response.data.message
+          ) {
+            message(error.response.data.message, { type: "error" });
+          } else {
+            message("登录失败，请稍后重试", { type: "error" });
           }
         })
         .finally(() => (loading.value = false));
+    } else {
+      loading.value = false;
     }
   });
 };

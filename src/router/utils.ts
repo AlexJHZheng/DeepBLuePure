@@ -64,34 +64,83 @@ function filterTree(data: RouteComponent[]) {
 }
 
 /** 过滤children长度为0的的目录，当目录下没有菜单时，会过滤此目录，目录没有赋予roles权限，当目录下只要有一个菜单有显示权限，那么此目录就会显示 */
-function filterChildrenTree(data: RouteComponent[]) {
-  const newTree = cloneDeep(data).filter((v: any) => v?.children?.length !== 0);
-  newTree.forEach(
-    (v: { children }) => v.children && (v.children = filterTree(v.children))
-  );
-  return newTree;
-}
+// function filterChildrenTree(data: RouteComponent[]) {
+//   const newTree = cloneDeep(data).filter((v: any) => v?.children?.length !== 0);
+//   newTree.forEach(
+//     (v: { children }) => v.children && (v.children = filterTree(v.children))
+//   );
+//   return newTree;
+// }
 
 /** 判断两个数组彼此是否存在相同值 */
 function isOneOfArray(a: Array<string>, b: Array<string>) {
-  return Array.isArray(a) && Array.isArray(b)
-    ? intersection(a, b).length > 0
-      ? true
-      : false
-    : true;
+  // 如果没有设置roles，则默认有权限
+  if (!Array.isArray(a)) {
+    // console.log("路由未设置roles，默认有权限");
+    return true;
+  }
+  // 如果设置了roles但用户没有角色，则无权限
+  if (!Array.isArray(b)) {
+    // console.log("用户没有角色，无权限");
+    return false;
+  }
+  // 判断是否有交集
+  const hasIntersection = intersection(a, b).length > 0;
+  // console.log("权限判断:", {
+  //   路由权限: a,
+  //   用户角色: b,
+  //   是否有交集: hasIntersection
+  // });
+  return hasIntersection;
 }
 
 /** 从localStorage里取出当前登录用户的角色roles，过滤无权限的菜单 */
 function filterNoPermissionTree(data: RouteComponent[]) {
+  // console.log("=== 开始权限过滤 ===");
   const currentRoles =
     storageLocal().getItem<DataInfo<number>>(userKey)?.roles ?? [];
-  const newTree = cloneDeep(data).filter((v: any) =>
-    isOneOfArray(v.meta?.roles, currentRoles)
-  );
-  newTree.forEach(
-    (v: any) => v.children && (v.children = filterNoPermissionTree(v.children))
-  );
-  return filterChildrenTree(newTree);
+  // console.log("当前用户角色:", currentRoles);
+
+  const newTree = cloneDeep(data).filter((v: any) => {
+    // console.log(`\n检查路由: ${v.path}`);
+    // console.log("路由信息:", {
+    //   路径: v.path,
+    //   名称: v.name,
+    //   元信息: v.meta,
+    //   子路由数量: v.children?.length || 0
+    // });
+
+    const hasPermission = isOneOfArray(v.meta?.roles, currentRoles);
+    // console.log("权限检查结果:", hasPermission);
+    return hasPermission;
+  });
+
+  // 先递归处理子节点
+  newTree.forEach((v: any) => {
+    if (v.children) {
+      // console.log(`\n处理 ${v.path} 的子路由`);
+      v.children = filterNoPermissionTree(v.children);
+    }
+  });
+
+  // 如果是目录（有children的节点），只要有一个子节点有权限就显示
+  const finalTree = newTree.filter((v: any) => {
+    if (v.children && v.children.length > 0) {
+      // console.log(`\n目录节点 ${v.path} 保留，因为有子节点`);
+      return true;
+    }
+    // console.log(`\n叶子节点 ${v.path} 保留，已通过权限检查`);
+    return true;
+  });
+
+  // console.log("\n过滤后的树:", {
+  //   输入节点数: data.length,
+  //   权限过滤后节点数: newTree.length,
+  //   最终节点数: finalTree.length
+  // });
+  // console.log("=== 权限过滤结束 ===\n");
+
+  return finalTree;
 }
 
 /** 通过指定 `key` 获取父级路径集合，默认 `key` 为 `path` */

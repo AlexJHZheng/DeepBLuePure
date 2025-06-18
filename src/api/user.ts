@@ -34,12 +34,26 @@ export type RefreshTokenResult = {
   };
 };
 
+/**
+ * 获取当前用户菜单（路由）
+ * @returns 菜单（路由）数据
+ */
+export type UserMenuResult = {
+  code: number;
+  message: string;
+  data: Array<any>; // 可根据实际后端返回结构细化类型
+};
+
 /** 登录 */
 export const getLogin = (data?: object) => {
-  return http.request<UserResult>("post", "/login", { data });
+  return http.request<UserResult>("post", "/api/user/login", { data });
 };
 
 /** 刷新`token` */
 export const refreshTokenApi = (data?: object) => {
   return http.request<RefreshTokenResult>("post", "/refresh-token", { data });
+};
+
+export const getUserMenu = () => {
+  return http.request<UserMenuResult>("get", "/api/user/menu");
 };

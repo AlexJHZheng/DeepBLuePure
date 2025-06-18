@@ -1,0 +1,92 @@
+# pure-admin 重点开发规则
+
+## 基本规则
+- 所有代码需要先说明用途，征得同意后再进行开发。
+- 所有功能块必须要先写好注释。
+
+## API 规则
+- 所有接口请求必须通过 `src/utils/http` 封装的 http 实例（PureHttp），禁止直接用 axios。
+- 接口基础地址（baseURL）统一通过 `.env` 文件配置，代码中用 `import.meta.env.VITE_API_URL` 获取。
+- 新增接口需在 `src/api` 下按业务模块分类，返回类型必须定义 TypeScript 类型。
+- 接口方法参数、返回值、注释需与后端文档保持一致。
+
+## 拦截器规则
+- 请求拦截器自动携带 token，token 过期时自动调用 `/refresh-token` 刷新，刷新期间新请求会等待。
+- `/login` 和 `/refresh-token` 接口不携带 token（白名单）。
+- 响应拦截器统一处理接口返回，支持自定义回调，关闭进度条动画。
+- token 失效或未登录时自动跳转登录页，并清理本地用户信息。
+
+## 错误处理规则
+- 所有接口异常（如网络错误、后端返回 success: false）必须统一处理，弹窗或消息提示用户。
+- 禁止在业务代码中直接 try-catch axios，异常由 http 封装统一处理。
+- 错误信息需友好、明确，便于用户理解和排查。
+
+## 路由规则
+- 路由配置统一在 `src/router` 下，支持静态和动态路由，动态路由根据用户角色/权限生成。
+- 路由懒加载（动态 import），受权限控制的路由需配置 meta 字段（如 roles、permissions、auths）。
+- 路由 meta 字段权限配置：
+  - `roles`: 页面级别权限，数组，指定哪些角色可访问该路由。
+  - `permissions` 或 `auths`: 按钮/操作级别权限，数组，指定该页面下可用的按钮权限标识。
+- 动态路由需根据后端返回的角色/权限动态生成，未登录用户访问受限页面时，自动重定向到登录页。
+- keep-alive 只支持到二级缓存，三级及以上路由拍平成二级。
+
+## 路由权限与按钮权限规范
+- 路由权限：
+  - 每个受权限控制的路由，必须在 meta 中配置 `roles` 字段，如：
+    ```js
+    meta: {
+      title: "系统管理",
+      roles: ["admin", "manager"]
+    }
+    ```
+  - 动态路由根据用户登录返回的 `roles` 字段进行过滤和生成，只有拥有对应角色的用户才能访问。
+  - 前端路由守卫（如 beforeEach）需校验用户角色，无权限则重定向到 403 或登录页。
+- 按钮权限：
+  - 按钮权限标识统一由后端返回，前端页面通过 meta 字段 `permissions` 或 `auths` 配置，如：
+    ```js
+    meta: {
+      title: "按钮权限",
+      auths: ["user:add", "user:edit", "user:delete"]
+    }
+    ```
+  - 用户登录后，接口返回的 `permissions` 字段为该用户所有按钮权限集合。
+  - 前端通过指令（如 v-auth）或工具函数判断当前用户是否有某按钮权限，未授权按钮应隐藏或禁用。
+  - 示例：
+    ```vue
+    <el-button v-if="hasAuth('user:add')">新增</el-button>
+    ```
+  - `hasAuth` 工具函数需判断用户权限集合中是否包含指定标识。
+
+## 组件使用规则
+- 通用组件放在 `src/components`，命名采用大驼峰（PascalCase），文件名与组件名一致。
+- 组件 props、emits 必须定义类型，禁止 any。
+- 组件样式必须使用 scoped，禁止全局污染。
+- 禁止直接操作 DOM，需通过 Vue 方式实现。
+
+## 其他
+- 代码必须通过 ESLint/Prettier 检查，禁止提交未格式化代码。
+- 所有新增功能需补充注释，重要逻辑需写明思路。
+- Git 提交信息遵循 Angular 规范（如 feat、fix、refactor 等）。
+
+#登录接口
+#接口
+1. 用户登录
+   - 路径: POST /api/user/login
+   - 说明: 用户登录接口，返回token和用户基本信息
+   - 参数: 
+     * username: string，用户名，必填
+     * password: string，密码，必填
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         avatar: number,
+         username: string,
+         nickname: string,
+         roles: [],
+         permissions: [],
+         accessToken: string,
+         refreshToken: string
+         expires: 
+       }
+   - 权限: 无需验证
