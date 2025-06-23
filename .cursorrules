@@ -96,7 +96,7 @@
   2.获取路由
   
 
- 3. 权限管理
+2. 权限管理
  权限管理
    a. 获取权限列表
    - 路径: GET /api/permissions
@@ -159,9 +159,171 @@
      * code: 状态码（200表示成功）
      * message: 状态信息
    - 权限: SUPER_ADMIN
+3. 菜单管理
+   a. 分页获取菜单
+   - 路径: GET /api/menus
+   - 说明: 获取菜单列表，支持分页和搜索
+   - 参数:
+     * page: number，页码，必填
+     * page_size: number，每页数量，必填
+     * keyword: string，搜索关键词（可选，支持name、title模糊查找）
+     * status: number，状态筛选（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         list: [
+           {
+             id: number,
+             parent_id: number,
+             name: string,
+             path: string,
+             component: string,
+             title: string,
+             icon: string,
+             order_num: number,
+             status: number,
+             create_time: string,
+             update_time: string
+           }
+         ],
+         pagination: {
+           total: number,
+           page: number,
+           page_size: number
+         }
+       }
+   - 权限: 需要token验证
+
+   b. 新增菜单
+   - 路径: POST /api/menus
+   - 说明: 创建新菜单
+   - 参数:
+     * name: string，菜单路由名称，必填
+     * path: string，菜单路由路径，必填
+     * component: string，组件路径，必填
+     * title: string，菜单标题，必填
+     * icon: string，菜单图标（可选）
+     * order_num: number，显示顺序（可选，默认0）
+     * status: number，状态（可选，默认1）
+     * parent_id: number，父菜单ID（可选，默认0）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         menu_id: number
+       }
+   - 权限: 需要token验证
+
+   c. 修改菜单
+   - 路径: PUT /api/menus/:menu_id
+   - 说明: 更新菜单信息
+   - 参数:
+     * name: string，菜单路由名称（可选）
+     * path: string，菜单路由路径（可选）
+     * component: string，组件路径（可选）
+     * title: string，菜单标题（可选）
+     * icon: string，菜单图标（可选）
+     * order_num: number，显示顺序（可选）
+     * status: number，状态（可选）
+     * parent_id: number，父菜单ID（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   d. 删除菜单
+   - 路径: DELETE /api/menus/:menu_id
+   - 说明: 删除菜单（会级联删除sys_role_menu关联）
+   - 参数: 无
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+4. 角色管理
+   a. 分页获取角色
+   - 路径: GET /api/roles
+   - 说明: 获取角色列表，支持分页和搜索
+   - 参数:
+     * page: number，页码，必填
+     * page_size: number，每页数量，必填
+     * keyword: string，搜索关键词（可选，支持role_name、role_key模糊查找）
+     * status: number，状态筛选（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         list: [
+           {
+             id: number,
+             role_name: string,
+             role_key: string,
+             status: number,
+             create_time: string,
+             update_time: string,
+             permissions: [ { id: number, permission_name: string } ],
+             menus: [ { id: number, title: string } ]
+           }
+         ],
+         pagination: {
+           total: number,
+           page: number,
+           page_size: number
+         }
+       }
+   - 权限: 需要token验证
+
+   b. 修改角色
+   - 路径: PUT /api/roles/:role_id
+   - 说明: 更新角色信息
+   - 参数:
+     * role_name: string，角色名称（可选）
+     * role_key: string，角色标识（可选）
+     * status: number，状态（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   c. 删除角色
+   - 路径: DELETE /api/roles/:role_id
+   - 说明: 删除角色（会级联删除sys_role_permission、sys_role_menu关联，若有用户使用则不能删除）
+   - 参数: 无
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   d. 分配角色权限
+   - 路径: POST /api/roles/:role_id/permissions
+   - 说明: 为角色分配权限，会覆盖原有的权限配置
+   - 参数:
+     * permission_ids: number[]，权限ID数组，必填
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   e. 分配角色页面（菜单）
+   - 路径: POST /api/roles/:role_id/menus
+   - 说明: 为角色分配页面（菜单），会覆盖原有的页面配置
+   - 参数:
+     * menu_ids: number[]，菜单ID数组，必填
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
 
 
-  #新增页面规则
+
+
+#新增页面规则
  1 . 目录与命名规范
     - 新页面必须放在 src/views/ 下，按业务模块分文件夹，页面文件名采用小写加中划线（kebab-case）命名。
     - 页面组件名采用大驼峰（PascalCase）命名，且与文件名保持一致。

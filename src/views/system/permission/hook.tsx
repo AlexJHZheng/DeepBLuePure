@@ -1,5 +1,4 @@
 import { ref, reactive, onMounted, h, defineComponent } from "vue";
-import type { FormInstance } from "element-plus";
 import { ElMessage } from "element-plus";
 import { addDialog } from "@/components/ReDialog";
 import {
@@ -32,15 +31,6 @@ const FormContent = defineComponent({
             placeholder="请输入权限标识"
           />
         </el-form-item>
-        {!props.formInline.id ? (
-          <el-form-item label="关联菜单ID" prop="menu_id">
-            <el-input-number
-              v-model={props.formInline.menu_id}
-              min={1}
-              placeholder="请输入关联菜单ID"
-            />
-          </el-form-item>
-        ) : null}
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model={props.formInline.status}>
             <el-radio label={1}>正常</el-radio>
@@ -55,10 +45,6 @@ const FormContent = defineComponent({
 export function usePermission() {
   const loading = ref(true);
   const dataList = ref<Permission[]>([]);
-  const searchFormParams = reactive({
-    permission_name: "",
-    permission_key: ""
-  });
 
   const pagination = reactive({
     total: 0,
@@ -83,8 +69,12 @@ export function usePermission() {
       prop: "status",
       cellRenderer: ({ row }) => (row.status === 1 ? "正常" : "禁用")
     },
-    { label: "创建时间", prop: "create_time" },
-    { label: "操作", fixed: "right", width: 130, slot: "operation" }
+    {
+      label: "创建时间",
+      prop: "create_time",
+      formatter: ({ create_time }) => create_time.slice(0, 10)
+    },
+    { label: "操作", fixed: "right", width: 180, slot: "operation" }
   ];
 
   async function onSearch() {
@@ -92,8 +82,7 @@ export function usePermission() {
     try {
       const { data } = await getPermissionList({
         page: pagination.currentPage,
-        page_size: pagination.pageSize,
-        ...searchFormParams
+        page_size: pagination.pageSize
       });
       dataList.value = data.list;
       pagination.total = data.pagination.total;
@@ -104,12 +93,6 @@ export function usePermission() {
       loading.value = false;
     }
   }
-
-  const resetForm = (formEl: FormInstance | undefined) => {
-    if (!formEl) return;
-    formEl.resetFields();
-    onSearch();
-  };
 
   function openDialog(title = "新增", row?: Permission) {
     addDialog({
@@ -179,9 +162,7 @@ export function usePermission() {
     columns,
     dataList,
     pagination,
-    searchFormParams,
     onSearch,
-    resetForm,
     openDialog,
     handleDelete
   };

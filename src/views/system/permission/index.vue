@@ -7,21 +7,16 @@ import { Perms } from "@/components/RePerms";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
-import Search from "@iconify-icons/ep/search";
 import Refresh from "@iconify-icons/ep/refresh";
-import AddFill from "@iconify-icons/ri/add-circle-line";
 
 defineOptions({ name: "SystemPermission" });
 
-const formRef = ref();
 const {
   loading,
   columns,
   dataList,
   pagination,
-  searchFormParams,
   onSearch,
-  resetForm,
   openDialog,
   handleDelete
 } = usePermission();
@@ -29,53 +24,10 @@ const {
 
 <template>
   <div class="main">
-    <el-form
-      ref="formRef"
-      :inline="true"
-      :model="searchFormParams"
-      class="search-form bg-bg_color w-[99/100] pl-8 pt-[12px]"
-    >
-      <el-form-item label="权限名称：" prop="permission_name">
-        <el-input
-          v-model="searchFormParams.permission_name"
-          placeholder="请输入权限名称"
-          clearable
-          class="!w-[200px]"
-        />
-      </el-form-item>
-      <el-form-item label="权限标识：" prop="permission_key">
-        <el-input
-          v-model="searchFormParams.permission_key"
-          placeholder="请输入权限标识"
-          clearable
-          class="!w-[180px]"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button
-          type="primary"
-          :icon="useRenderIcon(Search)"
-          :loading="loading"
-          @click="onSearch"
-        >
-          搜索
-        </el-button>
-        <el-button :icon="useRenderIcon(Refresh)" @click="resetForm(formRef)">
-          重置
-        </el-button>
-      </el-form-item>
-    </el-form>
-
     <PureTableBar title="权限列表" :columns="columns" @refresh="onSearch">
       <template #buttons>
         <Perms value="system:permission:add">
-          <el-button
-            type="primary"
-            :icon="useRenderIcon(AddFill)"
-            @click="openDialog()"
-          >
-            新增权限
-          </el-button>
+          <button class="button2" @click="openDialog()">新增权限</button>
         </Perms>
       </template>
       <template v-slot="{ size, dynamicColumns }">
@@ -143,5 +95,77 @@ const {
   :deep(.el-form-item) {
     margin-bottom: 12px;
   }
+}
+
+.button2 {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.4em 1.2em;
+  overflow: hidden;
+  font-size: 14px;
+  color: #090909;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 0.5em;
+  box-shadow:
+    6px 6px 12px #c5c5c5,
+    -6px -6px 12px #fff;
+  transition: all 0.2s ease-in;
+}
+
+.button2:active {
+  color: #666;
+  box-shadow:
+    inset 4px 4px 12px #c5c5c5,
+    inset -4px -4px 12px #fff;
+}
+
+.button2::before {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: -1;
+  display: block;
+  width: 140%;
+  height: 180%;
+  content: "";
+  background-color: rgb(0 0 0 / 5%);
+  border-radius: 50%;
+  transform: translateX(-50%) scaleY(1) scaleX(1.25);
+  transition: all 0.5s 0.1s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.button2::after {
+  position: absolute;
+  top: 180%;
+  left: 55%;
+  z-index: -1;
+  display: block;
+  width: 160%;
+  height: 190%;
+  content: "";
+  background-color: hsl(210deg 100% 54%);
+  border-radius: 50%;
+  transform: translateX(-50%) scaleY(1) scaleX(1.45);
+  transition: all 0.5s 0.1s cubic-bezier(0.55, 0, 0.1, 1);
+}
+
+.button2:hover {
+  color: #fff;
+  border: 1px solid hsl(210deg 100% 54%);
+}
+
+.button2:hover::before {
+  top: -35%;
+  background-color: hsl(210deg 100% 54%);
+  transform: translateX(-50%) scaleY(1.3) scaleX(0.8);
+}
+
+.button2:hover::after {
+  top: -45%;
+  background-color: hsl(210deg 100% 54%);
+  transform: translateX(-50%) scaleY(1.3) scaleX(0.8);
 }
 </style>
