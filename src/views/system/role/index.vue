@@ -32,6 +32,7 @@ import { getMenuList } from "@/api/menu";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import Delete from "@iconify-icons/ep/delete";
 import Refresh from "@iconify-icons/ep/refresh";
+import { handleTree } from "@/utils/tree";
 
 // 表格数据与分页
 const loading = ref(true);
@@ -283,7 +284,8 @@ function openAssignMenus(row: RoleItem) {
   let menuList = ref<any[]>([]);
   // 获取菜单列表
   getMenuList({ page: 1, page_size: 999 }).then(res => {
-    menuList.value = res.data.list;
+    // 转为树结构
+    menuList.value = handleTree(res.data.list, "id", "parent_id", "children");
   });
   addDialog({
     title: `分配页面 - ${row.role_name}`,
