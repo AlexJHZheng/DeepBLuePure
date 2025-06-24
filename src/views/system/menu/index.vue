@@ -22,22 +22,13 @@ import EditPen from "@iconify-icons/ep/edit-pen";
 import Delete from "@iconify-icons/ep/delete";
 import Refresh from "@iconify-icons/ep/refresh";
 import MenuForm from "./MenuForm";
+import { handleTree } from "@/utils/tree";
 
 // 表格数据与分页
 const loading = ref(true);
 const dataList = ref<MenuItem[]>([]);
 const pagination = reactive({
-  total: 0,
-  pageSize: 10,
-  currentPage: 1,
-  onPageSizeChange: (size: number) => {
-    pagination.pageSize = size;
-    onSearch();
-  },
-  onCurrentChange: (page: number) => {
-    pagination.currentPage = page;
-    onSearch();
-  }
+  total: 0
 });
 
 // 搜索与状态筛选
@@ -72,19 +63,21 @@ const columns: TableColumnList = [
   { label: "操作", fixed: "right", width: 180, slot: "operation" }
 ];
 
+const menuTree = ref<MenuItem[]>([]);
+
 /**
- * 获取菜单列表
+ * 获取菜单列表（树形）
  */
-async function onSearch() {
+async function fetchMenuTree() {
   loading.value = true;
   try {
     const { data } = await getMenuList({
-      page: pagination.currentPage,
-      page_size: pagination.pageSize,
+      page: 1,
+      page_size: 999,
       keyword: searchForm.keyword,
       status: searchForm.status
     });
-    dataList.value = data.list;
+    menuTree.value = handleTree(data.list, "id", "parent_id", "children");
     pagination.total = data.pagination.total;
   } catch (e) {
     ElMessage.error("获取菜单列表失败");
@@ -96,7 +89,7 @@ async function onSearch() {
 /**
  * 打开新增/编辑弹窗
  */
-function openDialog(title = "新增", row?: MenuItem) {
+function openDialog(title = "新增", row?: MenuItem, parentId = 0) {
   addDialog({
     title: `${title}菜单`,
     props: {
@@ -109,10 +102,10 @@ function openDialog(title = "新增", row?: MenuItem) {
         icon: row?.icon ?? "",
         order_num: row?.order_num ?? 0,
         status: row?.status ?? 1,
-        parent_id: row?.parent_id ?? 0
+        parent_id: row?.parent_id ?? parentId
       }
     },
-    width: "40%",
+    width: "520px",
     draggable: true,
     fullscreenIcon: true,
     closeOnClickModal: false,
@@ -129,7 +122,7 @@ function openDialog(title = "新增", row?: MenuItem) {
           ElMessage.success("新增成功");
         }
         done();
-        onSearch();
+        fetchMenuTree();
       } catch (e) {
         ElMessage.error("操作失败");
       }
@@ -144,14 +137,14 @@ async function handleDelete(row: MenuItem) {
   try {
     await deleteMenu(row.id);
     ElMessage.success("删除成功");
-    onSearch();
+    fetchMenuTree();
   } catch (e) {
     ElMessage.error("删除失败");
   }
 }
 
 onMounted(() => {
-  onSearch();
+  fetchMenuTree();
 });
 </script>
 
@@ -181,70 +174,70 @@ onMounted(() => {
         <el-button
           type="primary"
           :icon="useRenderIcon(Refresh)"
-          @click="onSearch"
+          @click="fetchMenuTree"
           >查询</el-button
         >
       </el-form-item>
     </el-form>
-    <PureTableBar title="菜单列表" :columns="columns" @refresh="onSearch">
-      <template #buttons>
-        <Perms value="system:menu:add">
-          <button class="button2" @click="openDialog()">新增菜单</button>
-        </Perms>
+    <div style="margin-bottom: 16px">
+      <Perms value="system:menu:add">
+        <button class="button2" @click="openDialog('新增', undefined, 0)">
+          新增顶级菜单
+        </button>
+      </Perms>
+    </div>
+    <el-tree
+      :data="menuTree"
+      node-key="id"
+      :props="{ label: 'title', children: 'children' }"
+      default-expand-all
+      highlight-current
+      style=" padding: 16px;background: #fff; border-radius: 6px"
+    >
+      <template #default="{ node, data }">
+        <span style="display: flex; align-items: center">
+          <span>{{ data.title }}</span>
+          <span style="margin-left: 8px; font-size: 12px; color: #888"
+            >({{ data.name }})</span
+          >
+          <span style="margin-left: 8px; font-size: 12px; color: #888">{{
+            data.path
+          }}</span>
+          <span v-if="data.icon" style="margin-left: 8px">
+            <component :is="useRenderIcon(data.icon)"
+          /></span>
+          <Perms value="system:menu:add">
+            <el-button
+              v-if="node.level < 3"
+              link
+              size="small"
+              type="primary"
+              @click.stop="openDialog('新增', undefined, data.id)"
+              >新增子菜单</el-button
+            >
+          </Perms>
+          <Perms value="system:menu:edit">
+            <el-button
+              link
+              size="small"
+              type="primary"
+              @click.stop="openDialog('编辑', data)"
+              >编辑</el-button
+            >
+          </Perms>
+          <Perms value="system:menu:delete">
+            <el-popconfirm
+              :title="`是否确认删除菜单名称为 ${data.title} 的这条数据？`"
+              @confirm="handleDelete(data)"
+            >
+              <template #reference>
+                <el-button link size="small" type="danger">删除</el-button>
+              </template>
+            </el-popconfirm>
+          </Perms>
+        </span>
       </template>
-      <template v-slot="{ size, dynamicColumns }">
-        <pure-table
-          align-whole="center"
-          showOverflowTooltip
-          table-layout="auto"
-          :loading="loading"
-          :size="size"
-          :data="dataList"
-          :columns="dynamicColumns"
-          :pagination="pagination"
-          :paginationSmall="size === 'small' ? true : false"
-          :header-cell-style="{
-            background: 'var(--el-table-row-hover-bg-color)',
-            color: 'var(--el-text-color-primary)'
-          }"
-          @page-size-change="pagination.onPageSizeChange"
-          @page-current-change="pagination.onCurrentChange"
-        >
-          <template #operation="{ row }">
-            <Perms value="system:menu:edit">
-              <el-button
-                class="reset-margin"
-                link
-                type="primary"
-                :size="size"
-                :icon="useRenderIcon(EditPen)"
-                @click="openDialog('编辑', row)"
-              >
-                修改
-              </el-button>
-            </Perms>
-            <Perms value="system:menu:delete">
-              <el-popconfirm
-                :title="`是否确认删除菜单名称为 ${row.title} 的这条数据？`"
-                @confirm="handleDelete(row)"
-              >
-                <template #reference>
-                  <el-button
-                    class="reset-margin"
-                    link
-                    type="primary"
-                    :size="size"
-                    :icon="useRenderIcon(Delete)"
-                  >
-                    删除
-                  </el-button>
-                </template>
-              </el-popconfirm>
-            </Perms>
-          </template>
-        </pure-table>
-      </template>
-    </PureTableBar>
+    </el-tree>
   </div>
 </template>
 
