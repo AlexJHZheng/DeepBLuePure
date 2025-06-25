@@ -1,5 +1,132 @@
 import { http } from "@/utils/http";
 
+/**
+ * 用户表结构类型
+ */
+export interface SysUser {
+  user_id: number;
+  username: string;
+  nickname: string;
+  avatar: string;
+  status: number; // 0:禁用 1:正常
+  create_time: string;
+  update_time: string;
+  roles: string; // 逗号分隔的角色名
+}
+
+/**
+ * 用户分页列表返回类型
+ */
+export interface UserListResult {
+  code: number;
+  message: string;
+  data: {
+    list: SysUser[];
+    pagination: {
+      total: number;
+      page: number;
+      page_size: number;
+    };
+  };
+}
+
+/**
+ * 获取用户列表（分页、搜索、状态筛选）
+ * @param params 查询参数
+ */
+export const getUserList = (params: {
+  page: number;
+  page_size: number;
+  keyword?: string;
+  status?: number;
+}) => {
+  return http.request<UserListResult>("get", "/api/users", { params });
+};
+
+/**
+ * 新增用户
+ * @param data 用户数据
+ */
+export const createUser = (data: {
+  username: string;
+  password: string;
+  nickname?: string;
+  avatar?: string;
+}) => {
+  return http.request<{
+    code: number;
+    message: string;
+    data: { user_id: number };
+  }>("post", "/api/users", { data });
+};
+
+/**
+ * 修改用户
+ * @param user_id 用户ID
+ * @param data 用户数据
+ */
+export const updateUser = (
+  user_id: number,
+  data: {
+    nickname?: string;
+    avatar?: string;
+    status?: number;
+  }
+) => {
+  return http.request<{ code: number; message: string; data: null }>(
+    "put",
+    `/api/users/${user_id}`,
+    { data }
+  );
+};
+
+/**
+ * 删除用户
+ * @param user_id 用户ID
+ */
+export const deleteUser = (user_id: number) => {
+  return http.request<{ code: number; message: string; data: null }>(
+    "delete",
+    `/api/users/${user_id}`
+  );
+};
+
+/**
+ * 修改用户密码
+ * @param user_id 用户ID
+ * @param data 密码数据
+ */
+export const updateUserPassword = (
+  user_id: number,
+  data: {
+    new_password: string;
+  }
+) => {
+  return http.request<{ code: number; message: string; data: null }>(
+    "post",
+    `/api/users/${user_id}/password`,
+    { data }
+  );
+};
+
+/**
+ * 分配用户角色
+ * @param user_id 用户ID
+ * @param data 角色数据
+ */
+export const assignUserRoles = (
+  user_id: number,
+  data: {
+    role_ids: number[];
+  }
+) => {
+  return http.request<{ code: number; message: string; data: null }>(
+    "post",
+    `/api/users/${user_id}/roles`,
+    { data }
+  );
+};
+
 export type UserResult = {
   success: boolean;
   data: {

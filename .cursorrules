@@ -319,6 +319,97 @@
      * message: 状态信息
      * data: null
    - 权限: 需要token验证
+5. 用户管理
+   a. 分页获取用户
+   - 路径: GET /api/users
+   - 说明: 获取用户列表，支持分页和搜索
+   - 参数:
+     * page: number，页码，必填
+     * page_size: number，每页数量，必填
+     * keyword: string，搜索关键词（可选，支持username、nickname模糊查找）
+     * status: number，状态筛选（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         list: [
+           {
+             user_id: number,
+             username: string,
+             nickname: string,
+             avatar: string,
+             status: number,
+             create_time: string,
+             update_time: string,
+             roles: string // 逗号分隔的角色名
+           }
+         ],
+         pagination: {
+           total: number,
+           page: number,
+           page_size: number
+         }
+       }
+   - 权限: 需要token验证
+
+   b. 新增用户
+   - 路径: POST /api/users
+   - 说明: 创建新用户
+   - 参数:
+     * username: string，用户名，必填
+     * password: string，密码，必填
+     * nickname: string，昵称（可选）
+     * avatar: string，头像（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: { user_id: number }
+   - 权限: 需要token验证
+
+   c. 修改用户
+   - 路径: PUT /api/users/:user_id
+   - 说明: 更新用户信息
+   - 参数:
+     * nickname: string，昵称（可选）
+     * avatar: string，头像（可选）
+     * status: number，状态（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   d. 删除用户
+   - 路径: DELETE /api/users/:user_id
+   - 说明: 删除用户（会级联删除sys_user_role关联）
+   - 参数: 无
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   e. 修改用户密码
+   - 路径: POST /api/users/:user_id/password
+   - 说明: 修改用户密码
+   - 参数:
+     * new_password: string，新密码，必填，长度不能小于6位
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
+
+   f. 分配用户角色
+   - 路径: POST /api/users/:user_id/roles
+   - 说明: 为指定用户分配角色，role_ids为角色ID数组，分配时会覆盖原有角色
+   - 参数:
+     * role_ids: number[]，角色ID数组，必填
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: null
+   - 权限: 需要token验证
 
 
 

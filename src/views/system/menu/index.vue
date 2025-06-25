@@ -192,7 +192,7 @@ onMounted(() => {
       :props="{ label: 'title', children: 'children' }"
       default-expand-all
       highlight-current
-      style=" padding: 16px;background: #fff; border-radius: 6px"
+      style="padding: 16px; background: #fff; border-radius: 6px"
     >
       <template #default="{ node, data }">
         <span style="display: flex; align-items: center">
