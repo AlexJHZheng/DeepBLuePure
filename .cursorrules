@@ -410,7 +410,32 @@
      * message: 状态信息
      * data: null
    - 权限: 需要token验证
-
+7. 产品分析（月度分析）
+   a. 分页获取分析数据
+   - 路径: GET /api/analyze_product
+   - 说明: 分页获取 analyze_product 表数据，支持按 analysis_month、category、ItemNo 条件过滤，analysis_month 不传时自动返回最近月份。
+   - 参数:
+     * page: number，页码，必填
+     * page_size: number，每页数量，必填
+     * analysis_month: string，分析月份（可选，不传则查最近月份）
+     * category: string，品类（可选）
+     * itemNo: string，商品编号（可选）
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         list: [ // 字段与数据库一致
+           {
+             analyze_id, ItemNo, resultId, analysis_result, analysis_month, tracking_result, createTime, is_urgent, category, updateTime, RemainingStock, averageSales, saleMonth, stockQty, track_saleMonth, inTransitTotal
+           }
+         ],
+         pagination: {
+           total: number,
+           page: number,
+           page_size: number
+         }
+       }
+   - 权限: 需要token验证
 
 
 
