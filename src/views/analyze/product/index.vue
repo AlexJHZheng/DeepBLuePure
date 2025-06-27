@@ -53,7 +53,13 @@ const columns = [
   { label: "跟踪销售月", prop: "track_saleMonth" },
   { label: "在途总数", prop: "inTransitTotal" },
   // { label: "是否加急", prop: "is_urgent" },
-  { label: "创建时间", prop: "createTime" }
+  //创建时间只要显示年月日
+  {
+    label: "创建时间",
+    prop: "createTime",
+    formatter: ({ createTime }) => createTime?.slice(0, 10)
+  }
+  // { label: "创建时间", prop: "createTime" }
   // { label: "更新时间", prop: "updateTime" }
 ];
 
