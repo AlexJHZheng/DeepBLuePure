@@ -53,6 +53,11 @@ const columns: TableColumnList = [
   { label: "用户名", prop: "username" },
   { label: "昵称", prop: "nickname" },
   {
+    label: "孚盟ID",
+    prop: "fuma_id",
+    cellRenderer: ({ row }) => row.fuma_id ?? "-"
+  },
+  {
     label: "角色",
     prop: "roles",
     cellRenderer: ({ row }) => row.roles || "-"
@@ -102,7 +107,8 @@ const userFormInline = reactive({
   confirmPassword: "",
   nickname: "",
   avatar: "",
-  status: 1
+  status: 1,
+  fuma_id: undefined
 });
 
 const passwordValidator = (rule, value) => {
@@ -147,6 +153,7 @@ function openDialog(title = "新增", row?: SysUser) {
   userFormInline.nickname = row?.nickname ?? "";
   userFormInline.avatar = row?.avatar ?? "";
   userFormInline.status = row?.status ?? 1;
+  userFormInline.fuma_id = row?.fuma_id ?? undefined;
   addDialog({
     title: `${title}用户`,
     width: "520px",
@@ -224,6 +231,17 @@ function openDialog(title = "新增", row?: SysUser) {
                   modelValue: userFormInline.avatar,
                   "onUpdate:modelValue": val => (userFormInline.avatar = val),
                   placeholder: "请输入头像URL"
+                })
+              ]
+            ),
+            h(
+              resolveComponent("el-form-item"),
+              { label: "孚盟ID", prop: "fuma_id" },
+              [
+                h(resolveComponent("el-input"), {
+                  modelValue: userFormInline.fuma_id,
+                  "onUpdate:modelValue": val => (userFormInline.fuma_id = val),
+                  placeholder: "请输入孚盟ID"
                 })
               ]
             ),

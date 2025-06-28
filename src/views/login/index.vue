@@ -44,31 +44,30 @@ const ruleForm = reactive({
 const onLogin = async (formEl: FormInstance | undefined) => {
   if (!formEl) return;
   loading.value = true;
-  await formEl.validate(valid => {
+  await formEl.validate(async valid => {
     if (valid) {
       useUserStoreHook()
         .loginByUsername({
           username: ruleForm.username,
           password: ruleForm.password
         })
-        .then(res => {
+        .then(async res => {
           if (res.success) {
-            // 获取后端路由
-            return initRouter().then(() => {
-              disabled.value = true;
-              setTimeout(() => {
-                const topMenu = getTopMenu(true);
-                console.log("topMenu", topMenu);
-                if (topMenu && topMenu.path) {
-                  router.push(topMenu.path).then(() => {
-                    message("登录成功", { type: "success" });
-                  });
-                } else {
-                  message("未获取到有效菜单，无法跳转", { type: "error" });
-                }
-                disabled.value = false;
-              }, 0);
-            });
+            // 登录成功后，先挂载动态路由再跳转
+            await initRouter();
+            disabled.value = true;
+            setTimeout(() => {
+              const topMenu = getTopMenu(true);
+              console.log("topMenu", topMenu);
+              if (topMenu && topMenu.path) {
+                router.push(topMenu.path).then(() => {
+                  message("登录成功", { type: "success" });
+                });
+              } else {
+                message("未获取到有效菜单，无法跳转", { type: "error" });
+              }
+              disabled.value = false;
+            }, 0);
           } else {
             const msg = (res as any).message || "登录失败";
             message(msg, { type: "error" });

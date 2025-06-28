@@ -9,6 +9,7 @@ export interface SysUser {
   nickname: string;
   avatar: string;
   status: number; // 0:禁用 1:正常
+  fuma_id?: number;
   create_time: string;
   update_time: string;
   roles: string; // 逗号分隔的角色名
@@ -52,6 +53,7 @@ export const createUser = (data: {
   password: string;
   nickname?: string;
   avatar?: string;
+  fuma_id?: number;
 }) => {
   return http.request<{
     code: number;
@@ -71,6 +73,7 @@ export const updateUser = (
     nickname?: string;
     avatar?: string;
     status?: number;
+    fuma_id?: number;
   }
 ) => {
   return http.request<{ code: number; message: string; data: null }>(
