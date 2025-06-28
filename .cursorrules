@@ -9,7 +9,8 @@
 - 接口基础地址（baseURL）统一通过 `.env` 文件配置，代码中用 `import.meta.env.VITE_API_URL` 获取。
 - 新增接口需在 `src/api` 下按业务模块分类，返回类型必须定义 TypeScript 类型。
 - 接口方法参数、返回值、注释需与后端文档保持一致。
-
+- JDY接口地址为VITE_API_URL
+- FUMA接口的话地址为FUMA_API_URL
 ## 拦截器规则
 - 请求拦截器自动携带 token，token 过期时自动调用 `/refresh-token` 刷新，刷新期间新请求会等待。
 - `/login` 和 `/refresh-token` 接口不携带 token（白名单）。
@@ -72,7 +73,7 @@
 使用图表库 @iconify-icons
 
 #登录接口
-#接口
+#JDY接口
 1. 用户登录
    - 路径: POST /api/user/login
    - 说明: 用户登录接口，返回token和用户基本信息
@@ -339,6 +340,7 @@
              nickname: string,
              avatar: string,
              status: number,
+             fuma_id: int,
              create_time: string,
              update_time: string,
              roles: string // 逗号分隔的角色名
@@ -360,6 +362,7 @@
      * password: string，密码，必填
      * nickname: string，昵称（可选）
      * avatar: string，头像（可选）
+     * fuma_id: int，孚盟ID（可选）
    - 返回数据:
      * code: 状态码（200表示成功）
      * message: 状态信息
@@ -373,6 +376,7 @@
      * nickname: string，昵称（可选）
      * avatar: string，头像（可选）
      * status: number，状态（可选）
+     * fuma_id: int，孚盟ID（可选）
    - 返回数据:
      * code: 状态码（200表示成功）
      * message: 状态信息
@@ -436,8 +440,185 @@
          }
        }
    - 权限: 需要token验证
+#FUMA接口
+## 查询正在审核中的订单
 
+- **接口地址**：/api/excEmp/pending
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
 
+### 请求参数
+| 参数名   | 类型           | 必填 | 说明                         |
+|----------|----------------|------|------------------------------|
+| empId    | string/array   | 是   | 当前处理人ID，可单个或数组   |
+| page     | number         | 否   | 页码，默认1                  |
+| pageSize | number         | 否   | 每页条数，默认10             |
+| pass     | string         | 是   | 接口密码（如：itblue21）     |
+
+#### 请求示例
+```json
+{
+  "empId": ["10001", "10002"],
+  "page": 1,
+  "pageSize": 10,
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | object  | 结果对象                   |
+| └─total   | number  | 总记录数                   |
+| └─records | array   | 订单列表                   |
+| └─page    | number  | 当前页码                   |
+| └─pageSize| number  | 每页条数                   |
+
+#### records每项字段（部分）
+| 字段      | 说明                 |
+|-----------|----------------------|
+| FID       | saExcEmp主键         |
+| ExcFID    | saExc主键            |
+| CurrStep  | 当前步骤             |
+| EmpID     | 当前处理人ID         |
+| CNEmpName | 当前处理人中文名     |
+| BeginTime | 开始时间             |
+| ...       | ...                  |
+| MouldID   | 模板ID（来自saExc）  |
+| BillNo    | 单据编号（来自saExc）|
+| FlowName  | 流程名称（来自saExc）|
+
+#### 返回示例
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "total": 25,
+    "records": [
+      {
+        "FID": "...",
+        "ExcFID": "...",
+        "CurrStep": "...",
+        "EmpID": "10001",
+        "CNEmpName": "张三",
+        "BeginTime": "2024-06-01 10:00:00",
+        "MouldID": "BP001",
+        "BillNo": "PO20240601",
+        "FlowName": "采购合同审批",
+        // ... 其它字段
+      }
+      // ...更多记录
+    ],
+    "page": 1,
+    "pageSize": 10
+  }
+}
+```
+
+## 订单审核接口
+
+- **接口地址**：/api/excEmp/audit
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
+
+### 请求参数
+| 参数名   | 类型   | 必填 | 说明                 |
+|----------|--------|------|----------------------|
+| FID      | string | 是   | saExcEmp主键         |
+| ExcFID   | string | 是   | saExc主键            |
+| EmpState | number | 是   | 2=通过，1=驳回       |
+| Notice   | string | 否   | 审核意见             |
+| pass     | string | 是   | 接口密码（如itblue21）|
+
+#### 请求示例
+```json
+{
+  "FID": "xxx",
+  "EmpState": 2,
+  "Notice": "同意",
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | null/[] | 无/错误信息                |
+
+#### 返回示例
+- 成功：
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": null
+}
+```
+- 失败：
+```json
+{
+  "code": 500,
+  "msg": "错误信息",
+  "data": []
+}
+```
+
+## 获取订单审核详情
+
+- **接口地址**：/api/excEmp/detail
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
+
+### 请求参数
+| 参数名 | 类型   | 必填 | 说明                 |
+|--------|--------|------|----------------------|
+| FID    | string | 是   | saExcEmp主键         |
+| pass   | string | 是   | 接口密码（如itblue21）|
+
+#### 请求示例
+```json
+{
+  "FID": "xxx",
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | object  | 详情对象                   |
+| └─type    | string  | 类型（poPO/bpProducts）     |
+| └─detail  | object  | 业务表详情                 |
+| └─mouldID | string  | 模板ID                     |
+| └─billNo  | string  | 单据编号                   |
+| └─flowName| string  | 流程名称                   |
+
+#### 返回示例
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "type": "poPO",
+    "detail": {
+      "FID": "...",
+      "PONo": "PO20240601",
+      "OwnerName": "张三",
+      // ...其它poPO字段
+    },
+    "mouldID": "PO004",
+    "billNo": "PO20240601",
+    "flowName": "采购合同审批"
+  }
+}
+```
 
 #新增页面规则
  1 . 目录与命名规范
