@@ -10,7 +10,7 @@
 - 新增接口需在 `src/api` 下按业务模块分类，返回类型必须定义 TypeScript 类型。
 - 接口方法参数、返回值、注释需与后端文档保持一致。
 - JDY接口地址为VITE_API_URL
-- FUMA接口的话地址为FUMA_API_URL
+- FUMA接口的话地址为VITE_FUMA_API_URL
 ## 拦截器规则
 - 请求拦截器自动携带 token，token 过期时自动调用 `/refresh-token` 刷新，刷新期间新请求会等待。
 - `/login` 和 `/refresh-token` 接口不携带 token（白名单）。
@@ -528,7 +528,6 @@
 | 参数名   | 类型   | 必填 | 说明                 |
 |----------|--------|------|----------------------|
 | FID      | string | 是   | saExcEmp主键         |
-| ExcFID   | string | 是   | saExc主键            |
 | EmpState | number | 是   | 2=通过，1=驳回       |
 | Notice   | string | 否   | 审核意见             |
 | pass     | string | 是   | 接口密码（如itblue21）|
@@ -600,7 +599,7 @@
 | └─billNo  | string  | 单据编号                   |
 | └─flowName| string  | 流程名称                   |
 
-#### 返回示例
+#### 返回示例（采购合同 poPO）
 ```json
 {
   "code": 200,
@@ -612,10 +611,41 @@
       "PONo": "PO20240601",
       "OwnerName": "张三",
       // ...其它poPO字段
+      "productList": [
+        {
+          "FID": "...",
+          "MFID": "...",
+          "ItemNo": "A001",
+          "OrderNo": 1,
+          "PurQry": 100,
+          "PONo": "PO20240601"
+        }
+        // ...更多明细
+      ]
     },
     "mouldID": "PO004",
     "billNo": "PO20240601",
     "flowName": "采购合同审批"
+  }
+}
+```
+
+#### 返回示例（产品档案 bpProducts）
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": {
+    "type": "bpProducts",
+    "detail": {
+      "FID": "...",
+      "ItemNo": "A001",
+      "OwnerName": "李四",
+      // ...其它bpProducts字段
+    },
+    "mouldID": "BP001",
+    "billNo": "A001",
+    "flowName": "产品档案审批"
   }
 }
 ```
