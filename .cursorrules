@@ -414,7 +414,7 @@
      * message: 状态信息
      * data: null
    - 权限: 需要token验证
-7. 产品分析（月度分析）
+6. 产品分析（月度分析）
    a. 分页获取分析数据
    - 路径: GET /api/analyze_product
    - 说明: 分页获取 analyze_product 表数据，支持按 analysis_month、category、ItemNo 条件过滤，analysis_month 不传时自动返回最近月份。
@@ -438,6 +438,69 @@
            page: number,
            page_size: number
          }
+       }
+   - 权限: 需要token验证
+7. 单品详情（多维度聚合）
+   - 路径: GET /api/product/detail
+   - 说明: 查询单个产品的当前库存、最近12个月销售、未来6个月预测、期末库存、在途、余货、产品基础信息、最近两次分析及打分、平均月销售、当前库存可售月数等多维度信息。
+   - 参数:
+     * product_id: string，产品编码，必填
+   - 返回数据:
+     * code: 状态码（200表示成功）
+     * message: 状态信息
+     * data: {
+         product_id: string,           // 产品编码
+         product_name: string,         // 产品全名
+         category: string,             // 产品分类
+         area: string,                 // 区域
+         status: string,               // 状态
+         current_stock: number,        // 当前库存
+         standard: number,             // 标准
+         price: number,                // 售价（infoProd表）
+         cost: number,                 // 成本价（infoProd表）
+         pack: number,                 // 装箱数
+         remaining_stock: number,      // 余货
+         in_transit: [                 // 在途信息（数组，可能有多个批次）
+           {
+             ItemNo: string,
+             ShipQty: number,
+             CreateDate: string,
+             DGSJ: string
+           }
+         ],
+         sales_12_months: number[],   // 最近12个月销售，最后一项为本月
+         forecast_6_months: [         // 未来6个月预测（product_forecast表所有字段）
+           {
+             product_code: string,
+             base_month: string,
+             forecast_month: string,
+             month_index: number,
+             predicted_sales: number,
+             ship_order: number,
+             purchase_order: number,
+             opening_stock: number,
+             in_transit_arrivals: number,
+             closing_stock: number,
+             remaining_stock_after: number,
+             period_start: string,
+             period_end: string,
+             forecast_type: string,
+             confidence_level: number
+           }
+         ],
+         analyze_results: [           // 最近两次分析及打分
+           {
+             analyze_id: number,
+             ItemNo: string,
+             analysis_month: string,
+             averageSales: number,
+             analysis_result: string,
+             analysis_result_point: number,
+             ... // 其它分析字段
+           }
+         ],
+         avg_month_sales: number,     // 平均月销售（优先取分析表）
+         can_sale_month: number       // 当前库存可售月数
        }
    - 权限: 需要token验证
 #FUMA接口

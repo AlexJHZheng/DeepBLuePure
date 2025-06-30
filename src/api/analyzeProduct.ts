@@ -53,3 +53,12 @@ export const getAnalyzeProductList = (params: {
     params
   });
 };
+
+/**
+ * 获取单品详情
+ * @param params { product_id }
+ * @returns 产品详情对象
+ */
+export const getProductDetail = (params: { product_id: string }) => {
+  return http.request<any>("get", "/api/product/detail", { params });
+};

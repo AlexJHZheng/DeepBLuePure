@@ -37,7 +37,7 @@
         :loading="loading"
         :header-cell-style="{ background: '#1976d2', color: '#fff' }"
       >
-        <el-table-column prop="FlowName" label="流程名称" width="280" />
+        <el-table-column prop="FlowName" label="流程名称" width="240" />
         <el-table-column prop="BillNo" label="单据编号" width="280" />
         <!-- 开始时间改成年月日分时的中文形态，slot 强制格式化 -->
         <el-table-column prop="BeginTime" label="开始时间" width="180">
@@ -123,8 +123,19 @@
             size="small"
             style="width: 100%"
             :header-cell-style="{ background: '#43a047', color: '#fff' }"
+            border
           >
-            <el-table-column prop="ItemNo" label="商品编号" />
+            <el-table-column label="操作" fixed="left" width="80">
+              <template #default="{ row }">
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click="onProductView(row)"
+                  >查看</el-button
+                >
+              </template>
+            </el-table-column>
+            <el-table-column prop="ItemNo" label="商品编号" fixed="left" />
             <el-table-column prop="Item_E_Name" label="产品外文名" width="300">
               <template #default="{ row }">
                 <span
@@ -155,7 +166,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column prop="BPurQty" label="采购数量" width="80">
+            <el-table-column prop="BPurQty" label="采购数量" width="70">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -165,7 +176,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column prop="UnitBoxQty" label="装箱数" width="80">
+            <el-table-column prop="UnitBoxQty" label="装箱数" width="60">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -175,7 +186,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column prop="BoxQty" label="箱数" width="80">
+            <el-table-column prop="BoxQty" label="箱数" width="50">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -185,7 +196,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column prop="FinishDate" label="交货期">
+            <el-table-column prop="FinishDate" label="交货期" width="120">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -206,7 +217,7 @@
               </template>
             </el-table-column>
 
-            <el-table-column prop="BPurPrice" label="采购单价" width="80">
+            <el-table-column prop="BPurPrice" label="采购单价" width="70">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -216,7 +227,7 @@
                 >
               </template>
             </el-table-column>
-            <el-table-column prop="ManufNote" label="生产要求">
+            <el-table-column prop="ManufNote" label="生产要求" width="200">
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
@@ -258,7 +269,7 @@
           </el-descriptions>
           <div
             v-if="bpProductImg"
-            style=" display: flex; justify-content: center;margin-top: 12px"
+            style="display: flex; justify-content: center; margin-top: 12px"
           >
             <el-card
               style="
@@ -297,7 +308,7 @@
           <!-- 快捷选项 -->
           <div style="margin-bottom: 6px">
             <el-tag
-              style=" margin-right: 8px;cursor: pointer"
+              style="margin-right: 8px; cursor: pointer"
               type="success"
               @click="auditForm.notice = '同意'"
               >通过</el-tag
@@ -336,6 +347,142 @@
         <div>暂无数据</div>
       </template>
     </el-dialog>
+    <!-- 产品详情弹窗 -->
+    <el-dialog
+      v-model="productDetailDialog.visible"
+      title="产品详情"
+      width="60%"
+      :close-on-click-modal="false"
+    >
+      <template v-if="productDetailDialog.loading">
+        <el-skeleton rows="4" animated />
+      </template>
+      <template v-else-if="productDetailDialog.data">
+        <el-descriptions :column="3" border>
+          <el-descriptions-item label="产品编码">{{
+            productDetailDialog.data.product_id
+          }}</el-descriptions-item>
+          <el-descriptions-item
+            v-if="productDetailDialog.purQty !== undefined"
+            label="采购数量"
+            >{{ productDetailDialog.purQty }}</el-descriptions-item
+          >
+          <el-descriptions-item label="分类">{{
+            productDetailDialog.data.category
+          }}</el-descriptions-item>
+          <el-descriptions-item label="产品名称" :span="3">{{
+            productDetailDialog.data.product_name
+          }}</el-descriptions-item>
+          <el-descriptions-item label="区域">{{
+            productDetailDialog.data.area
+          }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{
+            productDetailDialog.data.status
+          }}</el-descriptions-item>
+          <el-descriptions-item label="当前库存">{{
+            productDetailDialog.data.current_stock
+          }}</el-descriptions-item>
+          <el-descriptions-item label="装箱数">{{
+            productDetailDialog.data.pack
+          }}</el-descriptions-item>
+          <el-descriptions-item label="售价">{{
+            productDetailDialog.data.price
+          }}</el-descriptions-item>
+          <el-descriptions-item label="成本价">{{
+            productDetailDialog.data.cost
+          }}</el-descriptions-item>
+          <el-descriptions-item label="余货">{{
+            productDetailDialog.data.remaining_stock
+          }}</el-descriptions-item>
+          <el-descriptions-item label="平均月销售">{{
+            productDetailDialog.data.avg_month_sales
+          }}</el-descriptions-item>
+          <el-descriptions-item label="可售月数">{{
+            productDetailDialog.data.can_sale_month
+          }}</el-descriptions-item>
+        </el-descriptions>
+        <!-- 最近两次分析及打分表格 -->
+        <div style="margin: 18px 0 8px; font-weight: bold">
+          最近两次分析及打分
+        </div>
+        <el-table
+          :data="productDetailDialog.data.analyze_results || []"
+          size="small"
+          border
+          style="width: 100%; margin-bottom: 16px"
+        >
+          <el-table-column prop="analysis_month" label="分析月份" width="120" />
+          <el-table-column
+            prop="analysis_result"
+            label="分析结果"
+            width="120"
+          />
+          <el-table-column
+            prop="analysis_result_point"
+            label="分析得分"
+            width="100"
+          />
+          <el-table-column prop="averageSales" label="平均销量" width="100" />
+          <!-- 可根据实际接口返回补充更多字段 -->
+        </el-table>
+        <!-- 最近12个月销售情况横向表格 -->
+        <div style="margin: 18px 0 8px; font-weight: bold">
+          最近12个月销售情况
+        </div>
+        <el-table
+          :data="sales12MonthsRow"
+          size="small"
+          border
+          style="width: 100%; margin-bottom: 16px"
+        >
+          <el-table-column
+            v-for="(month, idx) in sales12MonthsHeader"
+            :key="month"
+            :prop="month"
+            :label="month"
+            width="68"
+          >
+            <template #default="scope">
+              {{
+                scope.row.sales_12_months ? scope.row.sales_12_months[idx] : 0
+              }}
+            </template>
+          </el-table-column>
+        </el-table>
+        <!-- 未来6个月预测表格 -->
+        <div style="margin: 18px 0 8px; font-weight: bold">未来6个月预测</div>
+        <el-table
+          :data="forecast6MonthsMatrix"
+          size="small"
+          border
+          style="width: 100%"
+        >
+          <el-table-column prop="field" label="字段/月份" width="110" fixed />
+          <el-table-column
+            v-for="month in forecast6MonthsHeader"
+            :key="month"
+            :prop="month"
+            :label="month"
+            width="100"
+          />
+        </el-table>
+        <div style="margin: 18px 0 8px; font-weight: bold">在途信息</div>
+        <el-table
+          :data="productDetailDialog.data.in_transit || []"
+          size="small"
+          border
+          style="width: 100%; margin-bottom: 16px"
+        >
+          <el-table-column prop="ItemNo" label="商品编号" width="120" />
+          <el-table-column prop="ShipQty" label="发货数量" width="100" />
+          <el-table-column prop="CreateDate" label="创建日期" width="140" />
+          <el-table-column prop="DGSJ" label="到港时间" width="140" />
+        </el-table>
+      </template>
+      <template v-else>
+        <div>暂无数据</div>
+      </template>
+    </el-dialog>
     <div
       v-if="tooltip.visible"
       class="custom-tooltip"
@@ -358,6 +505,7 @@ import {
   auditOrder
 } from "@/api/fuma";
 import { ElMessage } from "element-plus";
+import { getProductDetail } from "@/api/analyzeProduct";
 
 /**
  * Fuma 页面
@@ -456,6 +604,60 @@ export default defineComponent({
     function hideTooltip() {
       tooltip.visible = false;
     }
+
+    // 产品详情弹窗状态
+    const productDetailDialog = ref({
+      visible: false,
+      loading: false,
+      data: null as any,
+      purQty: undefined as number | undefined // 新增采购数量字段
+    });
+
+    // 计算最近12个月的月份（表头）
+    const sales12MonthsHeader = computed(() => {
+      const arr: string[] = [];
+      const now = new Date();
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
+        arr.push(
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+        );
+      }
+      return arr;
+    });
+    // 计算表格数据（只有一行，内容为销售数量数组）
+    const sales12MonthsRow = computed(() => {
+      const arr = productDetailDialog.value.data?.sales_12_months || [];
+      return [{ sales_12_months: arr }];
+    });
+
+    // 预测字段列表
+    const forecastFields = [
+      { key: "predicted_sales", label: "预测销量" },
+      { key: "opening_stock", label: "期初库存" },
+      { key: "closing_stock", label: "期末库存" },
+      { key: "ship_order", label: "发货单" },
+      { key: "purchase_order", label: "采购单" },
+      { key: "in_transit_arrivals", label: "在途到货" },
+      { key: "remaining_stock_after", label: "期末余货" }
+    ];
+    // 生成多行横向表格数据（确保每行都包含所有月份 key）
+    const forecast6MonthsHeader = computed(() => {
+      const arr = productDetailDialog.value.data?.forecast_6_months || [];
+      return arr.map((item, idx) => item?.forecast_month || `M${idx + 1}`);
+    });
+    const forecast6MonthsMatrix = computed(() => {
+      const arr = productDetailDialog.value.data?.forecast_6_months || [];
+      return forecastFields.map(field => {
+        const row: Record<string, any> = { field: field.label };
+        forecast6MonthsHeader.value.forEach((month, idx) => {
+          row[month] = arr[idx]?.[field.key] ?? "";
+        });
+        return row;
+      });
+    });
+    console.log("forecast6MonthsHeader", forecast6MonthsHeader.value);
+    console.log("forecast6MonthsMatrix", forecast6MonthsMatrix.value);
 
     /**
      * 获取 FUMA 审核订单列表
@@ -586,6 +788,25 @@ export default defineComponent({
       return val;
     };
 
+    /**
+     * 查看产品详情
+     * @param row 产品明细行
+     */
+    async function onProductView(row: any) {
+      productDetailDialog.value.visible = true;
+      productDetailDialog.value.loading = true;
+      productDetailDialog.value.data = null;
+      productDetailDialog.value.purQty = row.BPurQty; // 记录采购数量
+      try {
+        const { data } = await getProductDetail({ product_id: row.ItemNo });
+        productDetailDialog.value.data = data;
+      } catch (e) {
+        productDetailDialog.value.data = null;
+      } finally {
+        productDetailDialog.value.loading = false;
+      }
+    }
+
     return {
       fumaId,
       userStore,
@@ -605,7 +826,13 @@ export default defineComponent({
       formatDate,
       tooltip,
       showTooltip,
-      hideTooltip
+      hideTooltip,
+      onProductView,
+      productDetailDialog,
+      sales12MonthsHeader,
+      sales12MonthsRow,
+      forecast6MonthsHeader,
+      forecast6MonthsMatrix
     };
   }
 });
