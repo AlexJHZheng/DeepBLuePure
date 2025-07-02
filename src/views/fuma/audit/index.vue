@@ -50,7 +50,7 @@
         <!-- 操作列 -->
         <el-table-column label="操作" width="100" fixed="right">
           <template #default="{ row }">
-            <el-button size="big" type="text" @click="openDetail(row)"
+            <el-button size="large" type="text" @click="openDetail(row)"
               >查看</el-button
             >
           </template>
@@ -170,9 +170,9 @@
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
-                  @mouseenter="showTooltip($event, row.BPurQty)"
+                  @mouseenter="showTooltip($event, String(row.BPurQty))"
                   @mouseleave="hideTooltip"
-                  >{{ row.BPurQty }}</span
+                  >{{ Number(row.BPurQty) }}</span
                 >
               </template>
             </el-table-column>
@@ -180,9 +180,9 @@
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
-                  @mouseenter="showTooltip($event, row.UnitBoxQty)"
+                  @mouseenter="showTooltip($event, String(row.UnitBoxQty))"
                   @mouseleave="hideTooltip"
-                  >{{ row.UnitBoxQty }}</span
+                  >{{ Number(row.UnitBoxQty) }}</span
                 >
               </template>
             </el-table-column>
@@ -190,9 +190,9 @@
               <template #default="{ row }">
                 <span
                   class="ellipsis-cell"
-                  @mouseenter="showTooltip($event, row.BoxQty)"
+                  @mouseenter="showTooltip($event, String(row.BoxQty))"
                   @mouseleave="hideTooltip"
-                  >{{ row.BoxQty }}</span
+                  >{{ Number(row.BoxQty) }}</span
                 >
               </template>
             </el-table-column>
@@ -332,13 +332,13 @@
           <el-button
             type="success"
             :loading="auditForm.loading"
-            @click="handleAudit(2)"
+            @click="handleAudit(1)"
             >通过</el-button
           >
           <el-button
             type="danger"
             :loading="auditForm.loading"
-            @click="handleAudit(1)"
+            @click="handleAudit(2)"
             >驳回</el-button
           >
         </div>
@@ -722,23 +722,30 @@ export default defineComponent({
 
     /**
      * 审核操作（通过/驳回）
-     * @param empState 2=通过，1=驳回
+     * @param empAction 1=通过，2=驳回
      */
-    const handleAudit = async (empState: number) => {
+    const handleAudit = async (empAction: number) => {
       if (!detailDialog.value.mainFID) return;
       if (!auditForm.value.notice.trim()) {
         ElMessage.warning("请填写审核意见");
         return;
       }
+      // 获取当前用户 fuma_id 作为 LoginEmpID
+      const loginEmpId = fumaId.value || (userStore as any).fuma_id;
+      if (!loginEmpId) {
+        ElMessage.error("未获取到当前用户fuma_id，无法审核");
+        return;
+      }
       auditForm.value.loading = true;
       try {
         await auditOrder({
-          FID: String(detailDialog.value.mainFID), // 用主表FID
-          EmpState: empState,
+          FID: String(detailDialog.value.mainFID), // saExcEmp主键 FID
+          EmpAction: empAction, // 1=通过，2=驳回
           Notice: auditForm.value.notice,
+          LoginEmpID: loginEmpId,
           pass: "itblue21"
         });
-        ElMessage.success(empState === 2 ? "审核通过成功" : "已驳回");
+        ElMessage.success(empAction === 1 ? "审核通过成功" : "已驳回");
         detailDialog.value.visible = false;
         auditForm.value.notice = "";
         // 刷新订单列表

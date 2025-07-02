@@ -588,19 +588,21 @@
 - **请求头**：Content-Type: application/json
 
 ### 请求参数
-| 参数名   | 类型   | 必填 | 说明                 |
-|----------|--------|------|----------------------|
-| FID      | string | 是   | saExcEmp主键         |
-| EmpState | number | 是   | 2=通过，1=驳回       |
-| Notice   | string | 否   | 审核意见             |
-| pass     | string | 是   | 接口密码（如itblue21）|
+| 参数名      | 类型   | 必填 | 说明                         |
+|-------------|--------|------|------------------------------|
+| FID         | string | 是   | saExcEmp主键                 |
+| EmpAction   | number | 是   | 1=通过，2=驳回               |
+| Notice      | string | 否   | 审核意见                     |
+| LoginEmpID  | string | 是   | 当前用户ID                   |
+| pass        | string | 是   | 接口密码（如itblue21）        |
 
 #### 请求示例
 ```json
 {
   "FID": "xxx",
-  "EmpState": 2,
+  "EmpAction": 1,
   "Notice": "同意",
+  "LoginEmpID": "10001",
   "pass": "itblue21"
 }
 ```
@@ -712,6 +714,91 @@
   }
 }
 ```
+## 查询saExcEmp-仅测试用
+
+- **接口地址**：/api/excEmp/query
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
+
+### 请求参数
+| 参数名   | 类型   | 必填 | 说明                         |
+|----------|--------|------|------------------------------|
+| EmpID    | string | 否   | 当前处理人ID                 |
+| ExcFID   | string | 否   | saExc主键                    |
+| EmpState | number | 否   | 审核状态                     |
+| pass     | string | 是   | 接口密码（如：itblue21）     |
+
+#### 请求示例
+```json
+{
+  "EmpID": "10001",
+  "EmpState": 0,
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | array   | 结果数组                   |
+
+## 删除saExcEmp-仅测试用
+
+- **接口地址**：/api/excEmp/delete
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
+
+### 请求参数
+| 参数名 | 类型   | 必填 | 说明                 |
+|--------|--------|------|----------------------|
+| FID    | string | 是   | saExcEmp主键         |
+| pass   | string | 是   | 接口密码（如itblue21）|
+
+#### 请求示例
+```json
+{
+  "FID": "xxx",
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | null/[] | 删除成功null，失败[]       |
+
+## 查询saExc（支持billNo模糊、FlowExcOk精确）-仅测试用
+
+- **接口地址**：/api/exc/query
+- **请求方式**：POST
+- **请求头**：Content-Type: application/json
+
+### 请求参数
+| 参数名     | 类型   | 必填 | 说明                         |
+|------------|--------|------|------------------------------|
+| billNo     | string | 否   | 单据编号，模糊搜索           |
+| FlowExcOk  | number | 否   | 审核状态，0审核中1结束       |
+| pass       | string | 是   | 接口密码（如itblue21）        |
+
+#### 请求示例
+```json
+{
+  "billNo": "PO2024",
+  "FlowExcOk": 0,
+  "pass": "itblue21"
+}
+```
+
+### 返回参数
+| 字段      | 类型    | 说明                       |
+|-----------|---------|----------------------------|
+| code      | number  | 状态码，200成功            |
+| msg       | string  | 提示信息                   |
+| data      | array   | 结果数组                   |
 
 #新增页面规则
  1 . 目录与命名规范

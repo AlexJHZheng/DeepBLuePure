@@ -85,16 +85,78 @@ export function getOrderDetail(params: { FID: string; pass: string }) {
 
 /**
  * 订单审核（通过/驳回）
- * @param params { FID, EmpState, Notice, pass }
+ * @param params { FID, EmpAction, Notice, LoginEmpID, pass }
  * @returns 审核结果
  */
 export function auditOrder(params: {
-  FID: string;
-  EmpState: number;
-  Notice?: string;
+  FID: string; // saExcEmp主键
+  EmpAction: number; // 1=通过，2=驳回
+  Notice: string; // 审核意见
+  LoginEmpID: string; // 当前用户ID
   pass: string;
 }) {
   return http.request<FumaAuditResult>("post", "/api/excEmp/audit", {
+    data: params,
+    baseURL: import.meta.env.VITE_FUMA_API_URL
+  });
+}
+
+/**
+ * 查询 saExc（支持 billNo 模糊、FlowExcOk 精确）
+ * @param params { FlowExcOk, billNo, pass }
+ * @returns 查询结果数组
+ */
+export interface FumaExcQueryResult {
+  code: number;
+  msg: string;
+  data: any[];
+}
+
+export function queryExc(params: {
+  FlowExcOk?: number;
+  billNo?: string;
+  pass: string;
+}) {
+  return http.request<FumaExcQueryResult>("post", "/api/exc/query", {
+    data: params,
+    baseURL: import.meta.env.VITE_FUMA_API_URL
+  });
+}
+
+/**
+ * 查询 saExcEmp 审核流节点
+ * @param params { FID, ExcFID, EmpID, pass }
+ * @returns 节点数组
+ */
+export interface FumaExcEmpQueryResult {
+  code: number;
+  msg: string;
+  data: any[];
+}
+export function queryExcEmp(params: {
+  FID?: string;
+  ExcFID?: string;
+  EmpID?: string;
+  pass: string;
+}) {
+  return http.request<FumaExcEmpQueryResult>("post", "/api/excEmp/query", {
+    data: params,
+    baseURL: import.meta.env.VITE_FUMA_API_URL
+  });
+}
+
+/**
+ * 删除 saExcEmp 节点
+ * @param params { FID, pass }
+ * @returns 删除结果
+ */
+export interface FumaExcEmpDeleteResult {
+  code: number;
+  msg: string;
+  data: null | any[];
+}
+export function deleteExcEmp(params: { FID: string; pass: string }) {
+  return http.request<FumaExcEmpDeleteResult>("post", "/api/excEmp/delete", {
     data: params,
     baseURL: import.meta.env.VITE_FUMA_API_URL
   });
